@@ -9,9 +9,14 @@ sys.path.append(PROJ_ROOT_DIR)
 import yaml
 import json
 import requests
+from dataclasses import asdict
+from elasticsearch import Elasticsearch
+
 from skeleton.Template import Template
 from util.TimeUtil import TimeUtil
 from es.EsService import EsService
+from es.EsClient import EsClient
+from hmall.domain.HmallObj import HmallObj
 '''
 Hmall
 @author JunHyeon.Kim
@@ -20,11 +25,28 @@ Hmall
 class CllctOfHmall(Template, EsService):
     
     FLAG = "hmall"
-    def __init__(self) -> None:
+    def __init__(self, deploy: str) -> None:
+        self._es_client :Elasticsearch= EsClient.get_es_client(deploy= deploy)
         EsService.__init__(self)
-        self._config = CllctOfHmall.get_config()
-        self._cllct_current_time = TimeUtil.get_cllct_time()
-         
+        self._action_list :list[dict]= []
+        self._config :dict= CllctOfHmall.get_config()
+        self._cllct_current_time :str= TimeUtil.get_cllct_time()
+        self._cllct_time :str= TimeUtil.get_mmddHH()
+        self._es_index :str= EsService.get_index_name()
+    
+    def increase_es_bulk_insert(self) -> None:
+        ''''''
+    
+    def full_es_bulk_insert(self) -> None:
+        '''
+        :param:
+        :return:
+        '''
+        if self._action_list:
+            self.do_bulk_insert(es_client=self._es_client, action= self._action_list)
+        else:
+            print("적재할 데이터가 없습니다.")
+        
     def check_status_code(self, status_code: int) -> bool:
         '''
         :param status_code:
@@ -37,7 +59,7 @@ class CllctOfHmall(Template, EsService):
         :param:
         :return:
         '''
-        req_url :str= self._config["requrl"] + TimeUtil.get_mmddHH()
+        req_url :str= self._config["requrl"] + self._cllct_time
         response = requests.get(req_url)
         if self.check_status_code(status_code=response.status_code):
             response_data = str(response.text)\
@@ -46,10 +68,19 @@ class CllctOfHmall(Template, EsService):
             response_dict = json.loads(response_data)
             
             for element in response_dict:
-                keyword :str= element["keyword"]
-                ranking :int= element["ranking"]
-                print(f"keyword : {keyword} | ranking : {ranking}")
-        
+                document :dict= asdict(HmallObj(
+                        flag= CllctOfHmall.FLAG, 
+                        keyword= element["keyword"], 
+                        ranking=element["ranking"], 
+                        current_time= self._cllct_current_time,
+                        cllct_time= self._cllct_time
+                )) 
+                self._action_list.append({
+                    "_index": self._es_index,
+                    "_id": f'{document["flag"]}_{document["ranking"]}_{document["keyword"]}_{document["cllct_time"]}',
+                    "_source": document
+                })
+                
         response.close()
         
     @classmethod

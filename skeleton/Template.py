@@ -16,6 +16,13 @@ class Template(metaclass=ABCMeta):
         '''
     
     @abstractmethod
-    def es_bulk_insert(self)-> None:
+    def full_es_bulk_insert(self)-> None:
         '''
+        전체 색인
+        '''
+    
+    @abstractmethod
+    def increase_es_bulk_insert(self)-> None:
+        '''
+        증분 색인
         '''

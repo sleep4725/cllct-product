@@ -1,2 +1,7 @@
+##
+# @author JunHyeon.Kim
+# @date 20230325
+## -------------------------
 es:
-  index: ""
+  index: "idx_product"
+  alias: "alias_product"

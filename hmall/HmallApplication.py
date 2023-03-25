@@ -15,8 +15,9 @@ from hmall.cllct_product.CllctOfHmall import CllctOfHmall
 def main():
     '''
     '''
-    cllct_of_hmall = CllctOfHmall()
+    cllct_of_hmall = CllctOfHmall(deploy="local")
     cllct_of_hmall.get_product_rank()
-        
+    cllct_of_hmall.full_es_bulk_insert()
+     
 if __name__ == "__main__":
     main()

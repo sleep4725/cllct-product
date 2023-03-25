@@ -2,7 +2,11 @@ import os
 import yaml
 PROJ_ROOT_DIR :str= os.path.dirname(os.path.abspath(os.path.dirname(__file__)))
 from elasticsearch import Elasticsearch, exceptions
-     
+
+##
+# @author JunHyeon.Kim
+# @date 20230325
+## 
 class EsClient:
     
     @classmethod
@@ -39,6 +43,3 @@ class EsClient:
                         return es_client
         else:
             raise FileNotFoundError
-        
-if __name__ == "__main__":
-    EsClient.get_es_client(deploy="local")

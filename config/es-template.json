@@ -1,0 +1,18 @@
+{
+    "index_patterns": [
+        "idx_product_*"
+    ],
+    "settings": {
+        "number_of_shards": 5,
+        "number_of_replicas": 1
+    },
+    "mappings": {
+        "properties": {
+            "flag": {"type": "keyword"},
+            "keyword": {"type": "keyword"},
+            "ranking": {"type": "long"}, 
+            "current_time": {"type": "date", "format": ["yyyy-MM-dd HH:mm:ss"]},
+            "cllct_time": {"type": "date", "format": ["MMddHH"]}
+        }
+    }
+}
