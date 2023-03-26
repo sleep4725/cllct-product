@@ -17,6 +17,6 @@ def main():
     '''
     cllct_of_ssg = CllctOfSSG(deploy="local")
     cllct_of_ssg.get_product_rank()
-    
+    cllct_of_ssg.full_es_bulk_insert() 
 if __name__ == "__main__":
     main()

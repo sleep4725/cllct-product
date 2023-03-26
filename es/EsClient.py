@@ -6,7 +6,7 @@ from elasticsearch import Elasticsearch, exceptions
 ##
 # @author JunHyeon.Kim
 # @date 20230325
-## 
+## --------------------
 class EsClient:
     
     @classmethod

@@ -43,7 +43,15 @@ class CllctOfHmall(Template, EsService):
         :return:
         '''
         if self._action_list:
-            self.do_bulk_insert(es_client=self._es_client, action= self._action_list)
+            is_check :bool= self.do_bulk_insert(es_client=self._es_client, action= self._action_list)
+            if is_check:
+                EsService.exchange_index_of_alias(
+                    es_client= self._es_client,
+                    alias=EsService.es_config["es"]["alias"],
+                    index=self._es_index
+                )
+            else:
+                print("alias index exchange fail~!!")
         else:
             print("적재할 데이터가 없습니다.")
         

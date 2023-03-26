@@ -93,8 +93,9 @@ class EsService:
         ## 만약 있다면
         ### 기존 index 를 제거 후 새로운 index 를 추가
         if EsService.is_index_exists(es_client=es_client, index=alias):
-            indices = [idx for idx in es_client.indices.get_alias(alias).keys()]
-            EsService.delete_index_from_alias(es_client=es_client, alias=alias, index_list=indices)
+            indices = [idx for idx in es_client.indices.get_alias(alias).keys()][0]
+            if indices != index:
+                EsService.delete_index_from_alias(es_client=es_client, alias=alias, index_list=indices)
         else:
             EsService.add_index_from_alias(es_client=es_client, alias=alias, index=index)
     
@@ -107,7 +108,7 @@ class EsService:
         return EsService.es_config["es"]["index"] + "_" + TimeUtil.get_index_name_time()
 
     @classmethod
-    def do_bulk_insert(cls, es_client: Elasticsearch, action: list[dict]):
+    def do_bulk_insert(cls, es_client: Elasticsearch, action: list[dict])->bool:
         '''
         :param es_client:
         :param action:
@@ -118,7 +119,9 @@ class EsService:
             bulk(client= es_client, actions= action)
         except:
             print("bulk insert fail~!!")
+            return False
         else:
             print("bulk insert success~!!")
+            return True
         finally:
             action.clear() 
