@@ -35,8 +35,17 @@ class CllctOfHmall(Template, EsService):
         self._es_index :str= EsService.get_index_name()
     
     def increase_es_bulk_insert(self) -> None:
-        ''''''
-    
+        '''
+        '''
+        if self._action_list:
+            is_check :bool= self.do_bulk_insert(es_client=self._es_client, action= self._action_list)
+            if is_check:
+                print("insert success")
+            else:
+                print("insert_fail")
+        else:
+            print("적재할 데이터가 없습니다.")
+            
     def full_es_bulk_insert(self) -> None:
         '''
         :param:

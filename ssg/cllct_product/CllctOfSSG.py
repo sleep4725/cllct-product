@@ -19,6 +19,7 @@ from util.TimeUtil import TimeUtil
 from es.EsService import EsService
 from es.EsClient import EsClient
 from ssg.domain.SsgObj import SsgObj
+from cllct_logger.GetLogger import GetLogger
 '''
 Ssg
 @author JunHyeon.Kim
@@ -28,6 +29,7 @@ class CllctOfSSG(Template, EsService):
     
     FLAG = "ssg"
     def __init__(self, deploy: str) -> None:
+        global PROJ_ROOT_DIR
         self._es_client :Elasticsearch= EsClient.get_es_client(deploy= deploy)
         EsService.__init__(self)
         self._action_list :list[dict]= []
@@ -35,16 +37,31 @@ class CllctOfSSG(Template, EsService):
         self._cllct_current_time :str= TimeUtil.get_cllct_time()
         self._cllct_time :str= TimeUtil.get_mmddHH()
         self._es_index :str= EsService.get_index_name()
-    
+
+        self._ssg_logger = GetLogger.product_logger(
+            logging_file_path=os.path.join(PROJ_ROOT_DIR, f"log_data/{CllctOfSSG.FLAG}"), 
+            flag=CllctOfSSG.FLAG
+        )
+        
     def increase_es_bulk_insert(self) -> None:
-        '''
-        '''
-    
-    def full_es_bulk_insert(self) -> None:
         '''
         '''
         if self._action_list:
             is_check :bool= self.do_bulk_insert(es_client=self._es_client, action= self._action_list)
+            if is_check:
+                print("insert success")
+            else:
+                print("insert_fail")
+        else:
+            print("적재할 데이터가 없습니다.")
+             
+    def full_es_bulk_insert(self) -> None:
+        '''
+        '''
+        if self._action_list:
+            self._ssg_logger.info(f"Elasticsearch 에 적재하려는 데이터의 갯수: {len(self._action_list)}")
+            is_check :bool= self.do_bulk_insert(es_client=self._es_client, action= self._action_list)
+            self._ssg_logger.info(f"성공적으로 Elasticsearch 에 적재가 완료 되었습니다.")
             if is_check:
                 EsService.exchange_index_of_alias(
                     es_client= self._es_client,
@@ -54,21 +71,27 @@ class CllctOfSSG(Template, EsService):
             else:
                 print("alias index exchange fail~!!")
         else:
-            print("적재할 데이터가 없습니다.")
+            self._ssg_logger.info(f"Elasticsearch 에 적재할 데이터가 없습니다.") 
     
     def check_status_code(self, status_code: int) -> bool:
         '''
         :param status_code:
         '''
-        if status_code == 200: return True
-        else: return False
+        if status_code == 200:
+            self._ssg_logger.info(f"응답 코드 : {status_code}") 
+            return True
+        else:
+            self._ssg_logger.info(f"응답 코드 : {status_code}") 
+            return False
         
     def get_product_rank(self):
         '''
         :param:
         :return:
         '''
+        self._ssg_logger.info(f"작업 시작: {self._cllct_current_time} *******")
         req_url :str= self._config["requrl"]
+        self._ssg_logger.debug(f"req_url : {req_url}")
         response = requests.get(req_url)
         if self.check_status_code(status_code=response.status_code):
             bs_object :BeautifulSoup= BeautifulSoup(response.text, "html.parser")
@@ -103,7 +126,10 @@ class CllctOfSSG(Template, EsService):
                 })
             
             response.close()
-                    
+    
+    def __del__(self):
+        self._ssg_logger.info(f"작업 완료: {TimeUtil.get_cllct_time()} *******")
+    
     @classmethod
     def get_config(cls)-> dict:
         '''
